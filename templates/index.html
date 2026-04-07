@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oriva — Prescription Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#080d1a;--surface:#0e1525;--surface2:#141d30;
+--accent:#c8102e;--accent2:#e8354f;--teal:#0ea5e9;
+--text:#eef2ff;--muted:#6b7fa3;--border:#1e2d45;
+--success:#10b981;--warning:#f59e0b;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:26px;letter-spacing:-0.5px}
+.logo em{color:var(--accent);font-style:normal}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+.network-tag{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:20px;letter-spacing:0.5px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-bottom:1px solid var(--border)}
+.stat{padding:22px 28px;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-val{font-family:'Playfair Display',serif;font-size:38px;line-height:1}
+.danger{color:var(--accent)}.info{color:var(--teal)}.success{color:var(--success)}.neutral{color:var(--text)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:6px}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;overflow-x:auto}
+.tab{padding:14px 18px;font-size:12px;letter-spacing:0.5px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--text)}
+.content{padding:32px}
+.section{display:none}.section.active{display:block}
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.section-title{font-family:'Playfair Display',serif;font-size:20px}
+.section-line{flex:1;height:1px;background:var(--border)}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+th{padding:12px 18px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:500;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:14px 18px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;letter-spacing:0.5px}
+.HIGH{background:rgba(200,16,46,0.15);color:#e8354f;border:1px solid rgba(200,16,46,0.3)}
+.MODERATE{background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
+.LOW{background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)}
+.score-high{color:#e8354f;font-weight:500}.score-mod{color:#f59e0b;font-weight:500}.score-low{color:#10b981;font-weight:500}
+.savings-val{color:var(--success);font-weight:500}
+.search-bar{display:flex;gap:12px;margin-bottom:24px}
+.search-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 16px;outline:none;transition:border-color 0.2s}
+.search-input:focus{border-color:var(--accent)}
+.btn{padding:11px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s;white-space:nowrap}
+.btn:hover{background:var(--accent2)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:transparent}
+.btn-success{background:var(--success)}
+.btn-success:hover{background:#0d9668}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px}
+.profile-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.profile-name{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:4px}
+.profile-disease{font-size:13px;color:var(--muted)}
+.profile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.profile-stat{background:var(--surface2);border-radius:8px;padding:14px 16px}
+.profile-stat-val{font-size:22px;font-weight:500;font-family:'Playfair Display',serif}
+.profile-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.interaction-warning{background:rgba(200,16,46,0.08);border:1px solid rgba(200,16,46,0.3);border-radius:12px;padding:20px;margin-top:20px;display:none}
+.interaction-title{color:var(--accent);font-weight:500;font-size:14px;margin-bottom:8px}
+.interaction-msg{font-size:13px;color:var(--muted);line-height:1.6}
+.alternative-box{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:12px;padding:20px;margin-top:12px;display:none}
+.alternative-title{color:var(--success);font-weight:500;font-size:14px;margin-bottom:8px}
+.alternative-msg{font-size:13px;color:var(--muted);line-height:1.6}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;max-width:620px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:8px}
+.form-group.full{grid-column:1/-1}
+label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+input,select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:11px 14px;outline:none;transition:border-color 0.2s;width:100%}
+input:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--surface2)}
+.success-msg{margin-top:16px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;color:var(--success);font-size:13px;display:none}
+.loading{padding:48px;text-align:center;color:var(--muted);font-size:13px}
+.empty{padding:48px;text-align:center;color:var(--muted);font-size:13px}
+.small-muted{font-size:12px;color:var(--muted);max-width:380px;line-height:1.5}
+.knowledge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.knowledge-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px}
+.knowledge-card-title{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:12px;color:var(--text)}
+.knowledge-card p{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:10px}
+.knowledge-card p:last-child{margin-bottom:0}
+.drug-list{margin-top:12px}
+.drug-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.drug-row:last-child{border-bottom:none}
+.drug-type{font-size:11px;color:var(--muted)}
+.formula-box{background:var(--surface2);border-radius:8px;padding:16px;margin-top:12px;font-family:monospace;font-size:13px;color:var(--teal);line-height:2}
+.risk-levels{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.risk-row{display:flex;align-items:center;gap:12px;font-size:13px}
+.section-divider{height:1px;background:var(--border);margin:28px 0}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;letter-spacing:0.5px;text-transform:uppercase}
+.back-btn:hover{color:var(--text)}
+.prescrip-section-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;margin-top:24px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Ori<em>va</em></div>
+    <div class="logo-sub">Prescription Intelligence & Safety Engine</div>
+  </div>
+  <div class="network-tag">Oriva Health Network</div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val neutral" id="total-patients">—</div><div class="stat-label">Total Patients</div></div>
+  <div class="stat"><div class="stat-val danger" id="high-risk">—</div><div class="stat-label">High Risk</div></div>
+  <div class="stat"><div class="stat-val info" id="total-alerts">—</div><div class="stat-label">Active Alerts</div></div>
+  <div class="stat"><div class="stat-val success" id="total-alternatives">—</div><div class="stat-label">Safer Alternatives</div></div>
+</div>
+
+<nav>
+  <div class="tab active" onclick="showSection('dashboard',this)">Dashboard</div>
+  <div class="tab" onclick="showSection('search',this)">Find Patient</div>
+  <div class="tab" onclick="showSection('register',this)">Register Patient</div>
+<div class="tab" onclick="showSection('alerts',this)">Drug Alerts <span id="alert-badge" style="background:var(--accent);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;margin-left:4px"></span></div>
+  <div class="tab" onclick="showSection('alternatives',this)">Smart Alternatives</div>
+<div class="tab" onclick="showSection('checker',this)">Drug Checker</div>
+  <div class="tab" onclick="showSection('knowledge',this)">Medical Knowledge</div>
+<div class="tab" onclick="showSection('analytics',this)">Analytics</div>
+</nav>
+
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="section active" id="dashboard">
+    <div class="section-head">
+      <div class="section-title">Patient Risk Dashboard</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="dashboard-loading">Loading patients...</div>
+      <table id="dashboard-table" style="display:none">
+        <thead><tr><th>Patient</th><th>Age</th><th>Disease</th><th>Comorbidities</th><th>Oxygen %</th><th>Risk Score</th><th>Risk Level</th><th></th></tr></thead>
+        <tbody id="dashboard-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FIND PATIENT -->
+  <div class="section" id="search">
+    <div class="section-head">
+      <div class="section-title">Find Patient</div>
+      <div class="section-line"></div>
+    </div>
+    <div id="search-view">
+      <div class="search-bar">
+        <input class="search-input" id="search-input" placeholder="Type patient name..." oninput="searchPatient()">
+      </div>
+      <div class="table-wrap">
+        <div class="empty" id="search-empty">Start typing to search patients</div>
+        <table id="search-table" style="display:none">
+          <thead><tr><th>Patient</th><th>Age</th><th>Disease</th><th>Risk Score</th><th>Risk Level</th><th></th></tr></thead>
+          <tbody id="search-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="profile-view" style="display:none">
+      <div class="back-btn" onclick="backToSearch()">← Back to Search</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <div></div>
+  <button class="btn btn-outline" onclick="printPrescription()">🖨 Print Prescription</button>
+</div>
+      <div class="profile-card" id="profile-card"></div>
+      <div class="prescrip-section-title">Current Prescriptions</div>
+      <div class="table-wrap" id="prescrip-wrap">
+        <div class="empty">No prescriptions found</div>
+      </div>
+      <div class="prescrip-section-title" style="margin-top:24px">Active Alerts</div>
+      <div class="table-wrap" id="alerts-wrap">
+        <div class="empty">No alerts</div>
+      </div>
+      <div class="prescrip-section-title" style="margin-top:24px">Add New Prescription</div>
+      <div class="form-card" style="margin-top:12px">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Drug Name</label>
+            <input type="text" id="drug-search-input" placeholder="Type drug name..." oninput="searchDrug()">
+            <select id="drug-select" size="4" style="display:none;margin-top:4px" onchange="onDrugSelect()"></select>
+            <input type="hidden" id="selected-drug-id">
+            <input type="hidden" id="selected-patient-id">
+          </div>
+          <div class="form-group">
+            <label>Doctor</label>
+            <select id="doctor-select"><option value="">Select doctor...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Dosage</label>
+            <input type="text" id="rx-dosage" placeholder="e.g. 5mg daily">
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="rx-date">
+          </div>
+        </div>
+        <div class="interaction-warning" id="interaction-warning">
+          <div class="interaction-title">⚠ Dangerous Interaction Detected</div>
+          <div class="interaction-msg" id="interaction-msg"></div>
+        </div>
+        <div class="alternative-box" id="alternative-box">
+          <div class="alternative-title">✓ Oriva Recommends</div>
+          <div class="alternative-msg" id="alternative-msg"></div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px">
+          <button class="btn" onclick="submitPrescription()">Add Prescription</button>
+        </div>
+
+        <div class="success-msg" id="rx-success">Prescription added. Oriva is scanning for interactions...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER PATIENT -->
+  <div class="section" id="register">
+    <div class="section-head">
+      <div class="section-title">Register New Patient</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Rahul Mehta">
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="reg-age" placeholder="e.g. 45" min="1" max="120">
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="reg-gender">
+            <option value="">Select...</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Primary Disease</label>
+          <input type="text" id="reg-disease" placeholder="e.g. Diabetes, Hypertension">
+        </div>
+        <div class="form-group">
+          <label>Comorbidities Count</label>
+          <input type="number" id="reg-comorbidities" placeholder="e.g. 2" min="0" max="10">
+        </div>
+        <div class="form-group">
+          <label>Oxygen Level %</label>
+          <input type="number" id="reg-oxygen" placeholder="e.g. 96" min="70" max="100">
+        </div>
+        <div class="form-group full">
+          <label>Contact Number</label>
+          <input type="text" id="reg-contact" placeholder="e.g. 9820012345">
+        </div>
+      </div>
+      <button class="btn" onclick="registerPatient()">Register Patient</button>
+      <div class="success-msg" id="reg-success"></div>
+    </div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="section" id="alerts">
+    <div class="section-head">
+      <div class="section-title">Drug Interaction Alerts</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="alerts-loading">Loading alerts...</div>
+      <table id="alerts-table" style="display:none">
+        <thead><tr><th>Patient</th><th>Alert</th><th>Severity</th><th>Date</th></tr></thead>
+        <tbody id="alerts-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALTERNATIVES -->
+  <div class="section" id="alternatives">
+    <div class="section-head">
+      <div class="section-title">Smart Alternative Suggestions</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="table-wrap">
+      <div class="loading" id="alternatives-loading">Loading...</div>
+      <table id="alternatives-table" style="display:none">
+        <thead><tr><th>Patient</th><th>Dangerous Drug</th><th>Safer Alternative</th><th>Reason</th><th>Current Cost</th><th>Alternative Cost</th><th>Savings</th></tr></thead>
+        <tbody id="alternatives-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+<!-- DRUG CHECKER -->
+<div class="section" id="checker">
+  <div class="section-head">
+    <div class="section-title">Drug Compatibility Checker</div>
+    <div class="section-line"></div>
+  </div>
+  <div style="max-width:560px;margin:0 auto;text-align:center">
+    <p style="color:#6b7fa3;margin-bottom:28px;font-size:14px">Enter any two drugs to instantly check for dangerous interactions</p>
+    <div style="display:flex;gap:12px;margin-bottom:16px">
+      <input id="drug1" class="input" placeholder="Drug 1 (e.g. Warfarin)" style="flex:1">
+      <input id="drug2" class="input" placeholder="Drug 2 (e.g. Aspirin)" style="flex:1">
+    </div>
+    <button class="btn" onclick="checkDrugs()" style="width:100%;padding:14px">Check Compatibility</button>
+    <div id="checker-result" style="margin-top:28px"></div>
+  </div>
+</div>
+
+
+
+
+<!-- ANALYTICS -->
+  <div class="section" id="analytics">
+    <div class="section-head">
+      <div class="section-title">Clinical Analytics</div>
+      <div class="section-line"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Patient Risk Distribution</div>
+        <canvas id="riskChart" height="200"></canvas>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Most Dangerous Drugs</div>
+        <canvas id="drugChart" height="200"></canvas>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Cost Savings by Patient (%)</div>
+        <canvas id="savingsChart" height="200"></canvas>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Prescriptions by Doctor</div>
+        <canvas id="doctorChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDICAL KNOWLEDGE -->
+  <div class="section" id="knowledge">
+    <div class="section-head">
+      <div class="section-title">Medical Knowledge Base</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="knowledge-grid">
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">How Oriva Calculates Risk</div>
+        <p>Oriva uses a rule-based clinical decision support formula inspired by AI triage systems. Each patient is scored dynamically based on three parameters.</p>
+        <div class="formula-box">
+          risk_score =<br>
+          (age × 0.3) +<br>
+          (comorbidities × 20) +<br>
+          (100 − oxygen_level)
+        </div>
+        <div class="risk-levels">
+          <div class="risk-row"><span class="badge HIGH">HIGH</span><span style="color:var(--muted)">Score above 70 — immediate attention</span></div>
+          <div class="risk-row"><span class="badge MODERATE">MODERATE</span><span style="color:var(--muted)">Score 40–70 — monitor closely</span></div>
+          <div class="risk-row"><span class="badge LOW">LOW</span><span style="color:var(--muted)">Score below 40 — stable</span></div>
+        </div>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">What Are Drug Interactions?</div>
+        <p>A drug-drug interaction (DDI) occurs when two or more drugs affect each other's activity. This can increase toxicity, reduce effectiveness, or cause entirely new harmful effects.</p>
+        <p>DDIs are a leading cause of preventable hospital admissions in India. Studies show that over 67% of prescriptions with 3+ drugs contain at least one potential interaction.</p>
+        <p>Oriva detects these automatically at the point of prescription — before the patient takes the drug.</p>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Drug Database — All 20 Drugs</div>
+        <div class="drug-list" id="drug-knowledge-list">
+          <div class="loading">Loading drugs...</div>
+        </div>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">Why Generic Alternatives Matter</div>
+        <p>Brand-name drugs and their generic equivalents contain the same active ingredients and are therapeutically equivalent. However, brand drugs can cost 3–10x more than generics.</p>
+        <p>In India, the average patient spends 30–40% of their income on medicines. Oriva's finance layer identifies safer generic alternatives that reduce cost without compromising clinical outcomes.</p>
+        <p>Our system has identified alternatives saving patients between 42% and 85% per prescription.</p>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">High Risk Interactions in Our Database</div>
+        <p>These are the most dangerous drug combinations Oriva actively monitors:</p>
+        <div class="drug-list">
+          <div class="drug-row"><span>Warfarin + Aspirin</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Digoxin + Furosemide</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Phenytoin + Valproate</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Methotrexate + Ibuprofen</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Warfarin + Methotrexate</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Valproate + Methotrexate</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Amlodipine + Digoxin</span><span class="badge HIGH">HIGH</span></div>
+          <div class="drug-row"><span>Warfarin + Ibuprofen</span><span class="badge HIGH">HIGH</span></div>
+        </div>
+      </div>
+      <div class="knowledge-card">
+        <div class="knowledge-card-title">About Oriva</div>
+        <p>Oriva is a DBMS-driven Prescription Intelligence & Safety Engine designed to address a critical gap in Indian hospital infrastructure.</p>
+        <p>While standalone drug interaction checkers exist globally, Indian hospitals lack integrated systems that embed safety checks directly into the prescription workflow.</p>
+        <p>Oriva combines clinical safety, AI-inspired risk scoring, and financial optimization into one unified platform — making it a complete decision support system for modern healthcare.</p>
+        <p style="margin-top:12px;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Built with MySQL · Python Flask · HTML/CSS</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+
+async function checkDrugs() {
+  const drug1 = document.getElementById('drug1').value.trim();
+  const drug2 = document.getElementById('drug2').value.trim();
+  const resultDiv = document.getElementById('checker-result');
+
+  if (!drug1 || !drug2) {
+    resultDiv.innerHTML = '<div style="color:#c8102e;font-size:14px">Please enter both drug names</div>';
+    return;
+  }
+
+  resultDiv.innerHTML = '<div style="color:#6b7fa3;font-size:14px">Checking...</div>';
+
+  try {
+    const res = await fetch(`/check-drugs?drug1=${encodeURIComponent(drug1)}&drug2=${encodeURIComponent(drug2)}`);
+    const data = await res.json();
+
+    if (data.interaction) {
+      resultDiv.innerHTML = `
+        <div style="background:rgba(200,16,46,0.1);border:1px solid rgba(200,16,46,0.3);border-radius:12px;padding:24px">
+          <div style="font-size:22px;margin-bottom:8px">⚠️ Dangerous Interaction</div>
+          <div style="color:#c8102e;font-size:16px;font-weight:500;margin-bottom:8px">${drug1} + ${drug2}</div>
+          <div style="color:#9ca3af;font-size:13px">${data.description}</div>
+        </div>`;
+    } else {
+      resultDiv.innerHTML = `
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:12px;padding:24px">
+          <div style="font-size:22px;margin-bottom:8px">✅ Safe Combination</div>
+          <div style="color:#10b981;font-size:16px;font-weight:500;margin-bottom:8px">${drug1} + ${drug2}</div>
+          <div style="color:#9ca3af;font-size:13px">No known dangerous interaction found in the Oriva database.</div>
+        </div>`;
+    }
+  } catch(e) {
+    resultDiv.innerHTML = '<div style="color:#c8102e;font-size:14px">Error checking drugs. Try again.</div>';
+  }
+}
+
+
+
+
+
+function printPrescription() {
+  const card = document.getElementById('profile-card').innerHTML;
+  const prescriptions = document.getElementById('prescrip-wrap').innerHTML;
+  const alerts = document.getElementById('alerts-wrap').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Oriva Prescription Summary</title>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+      <style>
+        body{font-family:'DM Sans',sans-serif;padding:40px;max-width:800px;margin:0 auto;color:#111}
+        h1{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:4px}
+        .subtitle{font-size:12px;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+        .divider{height:1px;background:#eee;margin:24px 0}
+        .section-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:12px}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{text-align:left;padding:10px 12px;background:#f8f8f8;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888}
+        td{padding:10px 12px;border-bottom:1px solid #f0f0f0}
+        .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+        .HIGH{background:#fff0f0;color:#c8102e}.MODERATE{background:#fff8e6;color:#d97706}.LOW{background:#f0faf5;color:#059669}
+        .footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}
+        .profile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+        .profile-stat{background:#f8f8f8;border-radius:8px;padding:12px}
+        .profile-stat-val{font-size:20px;font-weight:500}
+        .profile-stat-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+        .score-high{color:#c8102e}.score-mod{color:#d97706}.score-low{color:#059669}
+        @media print{body{padding:20px}}
+      </style>
+    </head>
+    <body>
+      <h1>Ori<span style="color:#c8102e">va</span></h1>
+      <div class="subtitle">Prescription Intelligence & Safety Engine · Oriva Health Network</div>
+      <div class="divider"></div>
+      <div class="section-title">Patient Profile</div>
+      ${card}
+      <div class="divider"></div>
+      <div class="section-title">Current Prescriptions</div>
+      ${prescriptions}
+      <div class="divider"></div>
+      <div class="section-title">Active Alerts</div>
+      ${alerts}
+      <div class="footer">Generated by Oriva · ${new Date().toLocaleString()} · For clinical use only</div>
+      <script>window.onload=()=>window.print()<\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+let analyticsLoaded = false;
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'analytics' && !analyticsLoaded) {
+    analyticsLoaded = true;
+    loadAnalytics();
+  }
+}
+
+function scoreClass(level) {
+  if (level === 'HIGH') return 'score-high';
+  if (level === 'MODERATE') return 'score-mod';
+  return 'score-low';
+}
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('/patients');
+    const data = await res.json();
+    document.getElementById('total-patients').textContent = data.length;
+    document.getElementById('high-risk').textContent = data.filter(p => p.risk_level === 'HIGH').length;
+    const tbody = document.getElementById('dashboard-body');
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td>${p.full_name}</td>
+        <td>${p.age}</td>
+        <td>${p.disease}</td>
+        <td>${p.comorbidities}</td>
+        <td>${p.oxygen_level}%</td>
+        <td class="${scoreClass(p.risk_level)}">${p.risk_score}</td>
+        <td><span class="badge ${p.risk_level}">${p.risk_level}</span></td>
+        <td><span style="cursor:pointer;color:var(--teal);font-size:12px" onclick="viewProfile(${p.patient_id})">View →</span></td>
+      </tr>
+    `).join('');
+    document.getElementById('dashboard-loading').style.display = 'none';
+    document.getElementById('dashboard-table').style.display = 'table';
+  } catch(e) {
+    document.getElementById('dashboard-loading').textContent = 'Could not load. Is Flask running?';
+  }
+}
+
+async function loadAlerts() {
+  try {
+    const res = await fetch('/alerts');
+    const data = await res.json();
+    document.getElementById('total-alerts').textContent = data.length;
+document.getElementById('alert-badge').textContent = data.length;
+    const tbody = document.getElementById('alerts-body');
+    tbody.innerHTML = data.length ? data.map(a => `
+      <tr>
+        <td>${a.full_name}</td>
+        <td class="small-muted">${a.alert_message}</td>
+        <td><span class="badge ${a.severity}">${a.severity}</span></td>
+        <td>${a.alert_date}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" class="empty">No alerts found</td></tr>';
+    document.getElementById('alerts-loading').style.display = 'none';
+    document.getElementById('alerts-table').style.display = 'table';
+  } catch(e) {}
+}
+
+async function loadAlternatives() {
+  try {
+    const res = await fetch('/alternatives');
+    const data = await res.json();
+    document.getElementById('total-alternatives').textContent = data.length;
+    const tbody = document.getElementById('alternatives-body');
+    tbody.innerHTML = data.length ? data.map(a => `
+      <tr>
+        <td>${a.patient_name}</td>
+        <td>${a.dangerous_drug}</td>
+        <td>${a.safer_alternative}</td>
+        <td class="small-muted">${a.reason_for_switch}</td>
+        <td>${a.current_cost}</td>
+        <td>${a.alternative_cost}</td>
+        <td class="savings-val">${a.savings}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="7" class="empty">No alternatives found</td></tr>';
+    document.getElementById('alternatives-loading').style.display = 'none';
+    document.getElementById('alternatives-table').style.display = 'table';
+  } catch(e) {}
+}
+
+async function loadDrugKnowledge() {
+  try {
+    const res = await fetch('/drugs');
+    const data = await res.json();
+    document.getElementById('drug-knowledge-list').innerHTML = data.map(d => `
+      <div class="drug-row">
+        <div>
+          <div>${d.drug_name}</div>
+          <div class="drug-type">${d.drug_type}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">Brand: Rs.${d.brand_price}</div>
+          <div style="font-size:12px;color:var(--success)">Generic: Rs.${d.generic_price}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function loadDoctors() {
+  try {
+    const res = await fetch('/doctors');
+    const data = await res.json();
+    const sel = document.getElementById('doctor-select');
+    sel.innerHTML = '<option value="">Select doctor...</option>' + data.map(d =>
+      `<option value="${d.doctor_id}">${d.full_name} — ${d.specialization}</option>`
+    ).join('');
+  } catch(e) {}
+}
+
+let searchTimeout;
+async function searchPatient() {
+  clearTimeout(searchTimeout);
+  const name = document.getElementById('search-input').value;
+  if (name.length < 2) {
+    document.getElementById('search-empty').style.display = 'block';
+    document.getElementById('search-table').style.display = 'none';
+    return;
+  }
+  searchTimeout = setTimeout(async () => {
+    const res = await fetch(`/patient/search?name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    const tbody = document.getElementById('search-body');
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td>${p.full_name}</td>
+        <td>${p.age}</td>
+        <td>${p.disease}</td>
+        <td class="${scoreClass(p.risk_level)}">${p.risk_score}</td>
+        <td><span class="badge ${p.risk_level}">${p.risk_level}</span></td>
+        <td><span style="cursor:pointer;color:var(--teal);font-size:12px" onclick="viewProfile(${p.patient_id})">View →</span></td>
+      </tr>
+    `).join('');
+    document.getElementById('search-empty').style.display = data.length ? 'none' : 'block';
+    document.getElementById('search-table').style.display = data.length ? 'table' : 'none';
+  }, 300);
+}
+
+async function viewProfile(patient_id) {
+  const res = await fetch(`/patient/${patient_id}`);
+  const data = await res.json();
+  const p = data.patient;
+  document.getElementById('selected-patient-id').value = patient_id;
+  const riskClass = p.risk_level === 'HIGH' ? 'danger' : p.risk_level === 'MODERATE' ? 'warning' : 'success';
+  document.getElementById('profile-card').innerHTML = `
+    <div class="profile-top">
+      <div>
+        <div class="profile-name">${p.full_name}</div>
+        <div class="profile-disease">${p.disease} · ${p.age} years · ${p.comorbidities} comorbidities</div>
+      </div>
+      <span class="badge ${p.risk_level}">${p.risk_level} RISK</span>
+    </div>
+    <div class="profile-grid">
+      <div class="profile-stat">
+        <div class="profile-stat-val ${scoreClass(p.risk_level)}">${p.risk_score}</div>
+        <div class="profile-stat-label">Risk Score</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val">${p.oxygen_level}%</div>
+        <div class="profile-stat-label">Oxygen Level</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val">${p.comorbidities}</div>
+        <div class="profile-stat-label">Comorbidities</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val">${p.age}</div>
+        <div class="profile-stat-label">Age</div>
+      </div>
+    </div>
+  `;
+  const prescripWrap = document.getElementById('prescrip-wrap');
+  prescripWrap.innerHTML = data.prescriptions.length ? `
+    <table>
+      <thead><tr><th>Drug</th><th>Dosage</th><th>Doctor</th><th>Date</th><th>Brand Cost</th><th>Generic Cost</th></tr></thead>
+      <tbody>${data.prescriptions.map(pr => `
+        <tr>
+          <td>${pr.drug_name}</td>
+          <td>${pr.dosage}</td>
+          <td>${pr.doctor_name}</td>
+          <td>${pr.prescribed_date}</td>
+          <td>Rs. ${pr.brand_price}</td>
+          <td style="color:var(--success)">Rs. ${pr.generic_price}</td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  ` : '<div class="empty">No prescriptions yet</div>';
+  const alertsWrap = document.getElementById('alerts-wrap');
+  alertsWrap.innerHTML = data.alerts.length ? `
+    <table>
+      <thead><tr><th>Alert</th><th>Severity</th><th>Date</th></tr></thead>
+      <tbody>${data.alerts.map(a => `
+        <tr>
+          <td class="small-muted">${a.alert_message}</td>
+          <td><span class="badge ${a.severity}">${a.severity}</span></td>
+          <td>${a.alert_date}</td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  ` : '<div class="empty">No active alerts</div>';
+  document.getElementById('search-view').style.display = 'none';
+  document.getElementById('profile-view').style.display = 'block';
+  loadDoctors();
+}
+
+function backToSearch() {
+  document.getElementById('search-view').style.display = 'block';
+  document.getElementById('profile-view').style.display = 'none';
+  document.getElementById('interaction-warning').style.display = 'none';
+  document.getElementById('alternative-box').style.display = 'none';
+}
+
+let drugSearchTimeout;
+async function searchDrug() {
+  clearTimeout(drugSearchTimeout);
+  const name = document.getElementById('drug-search-input').value;
+  if (name.length < 2) {
+    document.getElementById('drug-select').style.display = 'none';
+    return;
+  }
+  drugSearchTimeout = setTimeout(async () => {
+    const res = await fetch(`/drugs/search?name=${encodeURIComponent(name)}`);
+    const drugs = await res.json();
+    const sel = document.getElementById('drug-select');
+    sel.innerHTML = drugs.map(d => `<option value="${d.drug_id}">${d.drug_name} — ${d.drug_type} (Rs.${d.brand_price})</option>`).join('');
+    sel.style.display = drugs.length ? 'block' : 'none';
+  }, 300);
+}
+
+async function onDrugSelect() {
+  const sel = document.getElementById('drug-select');
+  const drug_id = sel.value;
+  const patient_id = document.getElementById('selected-patient-id').value;
+  document.getElementById('selected-drug-id').value = drug_id;
+  document.getElementById('drug-search-input').value = sel.options[sel.selectedIndex].text.split(' —')[0];
+  sel.style.display = 'none';
+  if (!drug_id || !patient_id) return;
+  const res = await fetch('/check_interaction', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({patient_id, drug_id})
+  });
+  const data = await res.json();
+  const warning = document.getElementById('interaction-warning');
+  const altBox = document.getElementById('alternative-box');
+  if (data.interaction) {
+    document.getElementById('interaction-msg').innerHTML = `
+      <strong>${data.interaction.drug1}</strong> + <strong>${data.interaction.drug2}</strong><br>
+      ${data.interaction.interaction_effect}<br>
+      <span class="badge ${data.interaction.severity}" style="margin-top:8px;display:inline-block">${data.interaction.severity}</span>
+    `;
+    warning.style.display = 'block';
+    if (data.interaction.alternative) {
+      document.getElementById('alternative-msg').innerHTML = `
+        Switch to <strong>${data.interaction.alternative}</strong><br>
+        ${data.interaction.reason_for_switch}<br>
+        <span style="color:var(--success);margin-top:6px;display:block">${data.interaction.current_cost} → ${data.interaction.alternative_cost} · Save ${data.interaction.savings}</span>
+      `;
+      altBox.style.display = 'block';
+    }
+  } else {
+    warning.style.display = 'none';
+    altBox.style.display = 'none';
+  }
+}
+
+async function submitPrescription() {
+  const patient_id = document.getElementById('selected-patient-id').value;
+  const drug_id = document.getElementById('selected-drug-id').value;
+  const doctor_id = document.getElementById('doctor-select').value;
+  const dosage = document.getElementById('rx-dosage').value;
+  const date = document.getElementById('rx-date').value;
+  if (!patient_id || !drug_id || !doctor_id || !dosage || !date) {
+    alert('Please fill all fields and select a drug');
+    return;
+  }
+  await fetch('/add_prescription', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({patient_id, doctor_id, drug_id, dosage, date})
+  });
+  document.getElementById('rx-success').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('rx-success').style.display = 'none';
+    viewProfile(patient_id);
+  }, 2000);
+}
+
+async function registerPatient() {
+  const name = document.getElementById('reg-name').value;
+  const age = document.getElementById('reg-age').value;
+  const gender = document.getElementById('reg-gender').value;
+  const disease = document.getElementById('reg-disease').value;
+  const comorbidities = document.getElementById('reg-comorbidities').value;
+  const oxygen = document.getElementById('reg-oxygen').value;
+  const contact = document.getElementById('reg-contact').value;
+  if (!name || !age || !gender || !disease || !comorbidities || !oxygen || !contact) {
+    alert('Please fill all fields');
+    return;
+  }
+  const res = await fetch('/register_patient', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({full_name: name, age, gender, disease, comorbidities, oxygen_level: oxygen, contact})
+  });
+  const data = await res.json();
+  const msg = document.getElementById('reg-success');
+  msg.style.display = 'block';
+  msg.textContent = `Patient registered! Risk Score: ${data.patient.risk_score} — ${data.patient.risk_level} RISK`;
+  document.getElementById('total-patients').textContent = parseInt(document.getElementById('total-patients').textContent) + 1;
+  ['reg-name','reg-age','reg-disease','reg-comorbidities','reg-oxygen','reg-contact'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('reg-gender').value = '';
+}
+
+async function loadAnalytics() {
+  try {
+    const res = await fetch('/analytics');
+    const data = await res.json();
+
+    const riskColors = {'HIGH':'rgba(200,16,46,0.8)','MODERATE':'rgba(245,158,11,0.8)','LOW':'rgba(16,185,129,0.8)'};
+    new Chart(document.getElementById('riskChart'), {
+      type: 'doughnut',
+      data: {
+        labels: data.risk_distribution.map(r => r.risk_level),
+        datasets: [{
+          data: data.risk_distribution.map(r => r.count),
+          backgroundColor: data.risk_distribution.map(r => riskColors[r.risk_level]),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#eef2ff', font: { family: 'DM Sans' } } } }
+      }
+    });
+
+    new Chart(document.getElementById('drugChart'), {
+      type: 'bar',
+      data: {
+        labels: data.dangerous_drugs.map(d => d.drug_name),
+        datasets: [{
+          label: 'Interactions',
+          data: data.dangerous_drugs.map(d => d.interaction_count),
+          backgroundColor: 'rgba(200,16,46,0.7)',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#6b7fa3', font: { size: 10 } }, grid: { color: '#1e2d45' } },
+          y: { ticks: { color: '#6b7fa3' }, grid: { color: '#1e2d45' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('savingsChart'), {
+      type: 'bar',
+      data: {
+        labels: data.savings.map(s => s.full_name.split(' ')[0]),
+        datasets: [{
+          label: '% Saved',
+          data: data.savings.map(s => s.saving_pct),
+          backgroundColor: 'rgba(16,185,129,0.7)',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#6b7fa3', font: { size: 10 } }, grid: { color: '#1e2d45' } },
+          y: { ticks: { color: '#6b7fa3' }, grid: { color: '#1e2d45' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('doctorChart'), {
+      type: 'bar',
+      data: {
+        labels: data.doctor_stats.map(d => d.full_name.replace('Dr. ','')),
+        datasets: [{
+          label: 'Prescriptions',
+          data: data.doctor_stats.map(d => d.total_prescriptions),
+          backgroundColor: 'rgba(14,165,233,0.7)',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#6b7fa3', font: { size: 10 } }, grid: { color: '#1e2d45' } },
+          y: { ticks: { color: '#6b7fa3' }, grid: { color: '#1e2d45' } }
+        }
+      }
+    });
+
+  } catch(e) { console.log('Analytics error:', e); }
+}
+
+loadDashboard();
+loadAlerts();
+loadAlternatives();
+loadDrugKnowledge();
+</script>
+</body>
+</html>
